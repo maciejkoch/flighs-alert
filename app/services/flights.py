@@ -58,8 +58,22 @@ class FlightsService:
             arrdate=arrdate
         )
     
+    def _get_date_range(self) -> tuple[str, str]:
+        """Get the start and end dates used in the search."""
+        today = datetime.now()
+        three_months_later = today + timedelta(days=90)
+        
+        # Format dates as d.m.yyyy
+        start_date = today.strftime("%-d.%-m.%Y")
+        end_date = three_months_later.strftime("%-d.%-m.%Y")
+        
+        return start_date, end_date
+    
     def getFlights(self) -> Dict[str, Any]:
         try:
+            # Get the date information
+            start_date, end_date = self._get_date_range()
+            
             response = requests.get(self.url, headers=self.headers)
             
             if response.status_code == 200:
@@ -68,19 +82,30 @@ class FlightsService:
                 return {
                     "status": response.status_code,
                     "message": "Success",
-                    "flights": filtered_flights
+                    "flights": filtered_flights,
+                    "startDate": start_date,
+                    "endDate": end_date,
+                    "url": self.url
                 }
             else:
                 return {
                     "status": response.status_code,
                     "message": "Failed to fetch flights data",
-                    "flights": []
+                    "flights": [],
+                    "startDate": start_date,
+                    "endDate": end_date,
+                    "url": self.url
                 }
         except Exception as e:
+            # Get dates even in error case
+            start_date, end_date = self._get_date_range()
             return {
                 "status": 500,
                 "message": f"Error: {str(e)}",
-                "flights": []
+                "flights": [],
+                "startDate": start_date,
+                "endDate": end_date,
+                "url": self.url
             }
     
     def _parse_flights(self, html_content: str) -> List[Flight]:
