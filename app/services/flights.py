@@ -2,6 +2,7 @@ import requests
 from bs4 import BeautifulSoup, Tag
 from typing import List, Dict, Any, Optional
 import re
+from datetime import datetime, timedelta
 
 from app.models.flight import Flight
 
@@ -16,7 +17,7 @@ class FlightsService:
         "AppleWebKit/537.36 (KHTML, like Gecko) "
         "Chrome/91.0.4472.124 Safari/537.36"
     )
-    BASE_URL = (
+    BASE_URL_TEMPLATE = (
         "https://www.azair.eu/azfin.php?tp=0&searchtype=flexi&"
         "srcAirport=Katowice+%5BKTW%5D+%28%2BKRK%2COSR%2CLCJ%2CWRO%29&"
         "srcTypedText=&srcFreeTypedText=&srcMC=&srcap0=KRK&srcap1=OSR&"
@@ -26,7 +27,7 @@ class FlightsService:
         "minHourStay=0%3A45&maxHourStay=23%3A20&"
         "minHourOutbound=17%3A00&maxHourOutbound=24%3A00&"
         "minHourInbound=20%3A00&maxHourInbound=24%3A00&"
-        "depdate=18.8.2025&arrdate=31.12.2025&"
+        "depdate={depdate}&arrdate={arrdate}&"
         "minDaysStay=4&maxDaysStay=5&nextday=0&autoprice=true&"
         "currency=PLN&wizzxclub=false&flyoneclub=false&"
         "blueairbenefits=false&megavolotea=false&schengen=false&"
@@ -39,9 +40,23 @@ class FlightsService:
     
     def __init__(self, price_limit: float = DEFAULT_PRICE_LIMIT):
         """Initialize the FlightsService with optional price limit."""
-        self.url = self.BASE_URL
+        self.url = self._generate_url()
         self.headers = {"User-Agent": self.USER_AGENT}
         self.price_limit = price_limit
+    
+    def _generate_url(self) -> str:
+        """Generate URL with current date and current date + 3 months."""
+        today = datetime.now()
+        three_months_later = today + timedelta(days=90)  # Approximately 3 months
+        
+        # Format dates as d.m.yyyy (e.g., 18.8.2025)
+        depdate = today.strftime("%-d.%-m.%Y")
+        arrdate = three_months_later.strftime("%-d.%-m.%Y")
+        
+        return self.BASE_URL_TEMPLATE.format(
+            depdate=depdate,
+            arrdate=arrdate
+        )
     
     def getFlights(self) -> Dict[str, Any]:
         try:
