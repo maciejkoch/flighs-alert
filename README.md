@@ -17,7 +17,8 @@ flights-alert/
 │       ├── flights-scheduler.py  # Flight monitoring scheduler script
 │       ├── models/           # Flight data models
 │       └── services/         # Flight monitoring logic
-│           └── azair_scraper.py  # Azair.eu web scraping service
+│           ├── azair_scraper.py  # Azair.eu web scraping service
+│           └── email_sender.py   # Email alert service
 └── response-examples/         # Example responses
 ```
 
@@ -33,10 +34,13 @@ flights-alert/
 
 ### ⏰ Scheduler Service (`services/scheduler/`)
 
-- **Purpose**: Flight price monitoring and alerts
+- **Purpose**: Flight price monitoring and email alerts
 - **Dependencies**: Requests, BeautifulSoup4, Pydantic
-- **Execution**: Prints "Job is working" and monitors flight data
-- **Contains**: All flight monitoring logic, models, and services
+- **Features**:
+  - Monitors flight prices from Azair.eu
+  - Sends email alerts when flights are found
+  - Configurable via environment variables
+- **Contains**: Flight monitoring logic, models, and email service
 
 ## 🚀 Running Services
 
@@ -55,6 +59,38 @@ Access at: http://localhost:8000
 cd services/scheduler
 uv run python flights-scheduler.py
 ```
+
+## ⚙️ Email Configuration
+
+The scheduler can send email alerts when flights are found. Configure these environment variables:
+
+### Required Variables
+
+```bash
+EMAIL_USER=your-email@gmail.com          # Your email address
+EMAIL_PASSWORD=your-app-password          # App password (not regular password)
+ALERT_EMAILS=user@example.com,user2@example.com  # Recipients (comma-separated)
+```
+
+### Optional Variables
+
+```bash
+SMTP_SERVER=smtp.gmail.com               # SMTP server (default: Gmail)
+SMTP_PORT=587                           # SMTP port (default: 587)
+FROM_EMAIL=your-email@gmail.com         # From address (default: EMAIL_USER)
+FROM_NAME=Flights Alert                 # From name (default: "Flights Alert")
+SEND_NO_FLIGHTS_ALERT=false            # Send alert when no flights found
+```
+
+### Gmail Setup
+
+1. Enable 2-factor authentication on your Google account
+2. Generate an "App Password" for the flights alert app
+3. Use the app password as `EMAIL_PASSWORD` (not your regular password)
+
+### Railway Environment Variables
+
+Set these in Railway dashboard under "Variables" tab for your scheduler service.
 
 ## 🐳 Docker Deployment
 
