@@ -17,7 +17,7 @@ RUN uv lock && uv sync --frozen --no-dev
 COPY . .
 
 # Make scheduler script executable
-RUN chmod +x /app/flights
+RUN chmod +x /app/flights-scheduler.py
 
 # Run the scheduler script
-CMD ["uv", "run", "python", "/app/flights"]
+CMD ["uv", "run", "python", "/app/flights-scheduler.py"]

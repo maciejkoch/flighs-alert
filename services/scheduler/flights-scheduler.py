@@ -10,7 +10,7 @@ from datetime import datetime
 # Add local services to path
 sys.path.insert(0, os.path.dirname(__file__))
 
-from services.flights import FlightsService
+from services.azair_scraper import FlightsService
 
 
 def main():
