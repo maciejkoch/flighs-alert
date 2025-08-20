@@ -1,17 +1,17 @@
-import sys
-import os
-
-# Add shared library to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
-
 from fastapi import FastAPI
 import uvicorn
-from api import health, root
 
-app = FastAPI(title="Flights Alert API", version="0.1.0")
+app = FastAPI(title="Simple API", version="0.1.0")
 
-app.include_router(root.router)
-app.include_router(health.router)
+
+@app.get("/")
+def read_root():
+    return "Hello world"
+
+
+@app.get("/health")
+def health_check():
+    return {"status": "ok"}
 
 
 if __name__ == "__main__":

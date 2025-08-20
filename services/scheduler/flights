@@ -7,10 +7,10 @@ import sys
 import os
 from datetime import datetime
 
-# Add shared library to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
+# Add local services to path
+sys.path.insert(0, os.path.dirname(__file__))
 
-from shared.services.flights import FlightsService
+from services.flights import FlightsService
 
 
 def main():

@@ -4,7 +4,7 @@ from typing import List, Dict, Any, Optional
 import re
 from datetime import datetime, timedelta
 
-from shared.models.flight import Flight
+from models.flight import Flight
 
 
 class FlightsService:
