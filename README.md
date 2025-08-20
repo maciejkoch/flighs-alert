@@ -69,14 +69,14 @@ Each service has its own Dockerfile with optimized dependencies:
 ### Build API Service
 
 ```bash
-docker build -f services/api/Dockerfile -t flights-api .
+docker build -f Dockerfile.api -t flights-api .
 docker run -p 8000:8000 flights-api
 ```
 
 ### Build Scheduler Service
 
 ```bash
-docker build -f services/scheduler/Dockerfile -t flights-scheduler .
+docker build -f Dockerfile.scheduler -t flights-scheduler .
 docker run flights-scheduler
 ```
 
@@ -87,13 +87,13 @@ docker run flights-scheduler
 **API Service:**
 
 1. Create Railway service from repo
-2. Set build source: `services/api/Dockerfile`
+2. Set build source: `Dockerfile.api`
 3. Service will run on assigned port
 
 **Scheduler Service:**
 
 1. Create second Railway service from same repo
-2. Set build source: `services/scheduler/Dockerfile`
+2. Set build source: `Dockerfile.scheduler`
 3. Service runs scheduler job once and exits (perfect for cron)
 
 ### Option 2: Cron Jobs
