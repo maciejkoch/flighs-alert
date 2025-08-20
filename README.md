@@ -30,3 +30,26 @@ The API will be available at [http://localhost:8000](http://localhost:8000)
 
 - `GET /` - Returns "hello world"
 - `GET /health` - Returns API health status
+
+## Scheduler
+
+The project includes a scheduler script for Railway's cron jobs:
+
+### Running the scheduler locally
+
+```bash
+uv run scheduler.py
+```
+
+### Deploying to Railway
+
+1. Deploy your application to Railway
+2. In your Railway project dashboard, go to the "Cron" tab
+3. Add a new cron job with the command: `uv run scheduler.py`
+4. Set your desired schedule (e.g., `0 */6 * * *` for every 6 hours)
+
+The scheduler script will output:
+
+- "Job is working"
+- Current timestamp
+- Success confirmation
