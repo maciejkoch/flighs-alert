@@ -1,72 +1,160 @@
-# Flights Alert
+# Flights Alert - Microservices Architecture
 
-A service for monitoring flight prices and receiving alerts on price drops.
+A service for monitoring flight prices and receiving alerts on price drops, built with a microservices architecture.
 
-## Setup
+## 🏗️ Architecture Overview
 
-This project uses Python 3.13 and [uv](https://github.com/astral-sh/uv) for dependency management.
+```
+flights-alert/
+├── shared/                     # Shared library
+│   ├── models/                 # Pydantic models (Flight)
+│   └── services/              # Business logic (FlightsService)
+├── services/
+│   ├── api/                   # FastAPI service
+│   │   ├── pyproject.toml     # API-specific dependencies
+│   │   ├── Dockerfile         # API service container
+│   │   └── main.py           # FastAPI application
+│   └── scheduler/             # Scheduler service
+│       ├── pyproject.toml     # Minimal scheduler dependencies
+│       ├── Dockerfile         # Scheduler service container
+│       └── flights           # Executable scheduler script
+└── response-examples/         # Example responses
+```
 
-Dependencies are automatically installed when you run the application with uv.
+## 🎯 Services
 
-## Running the API
+### 📡 API Service (`services/api/`)
 
-You can run the API in two ways:
+- **Purpose**: REST API for flight data
+- **Dependencies**: FastAPI, Uvicorn, Requests, BeautifulSoup4, Pydantic
+- **Port**: 8000
+- **Endpoints**:
+  - `GET /` - Returns flight search results
+  - `GET /health` - Health check
 
-### Using the start script
+### ⏰ Scheduler Service (`services/scheduler/`)
+
+- **Purpose**: Automated flight monitoring jobs
+- **Dependencies**: Requests, BeautifulSoup4, Pydantic (minimal set)
+- **Execution**: Prints "Job is working" and can fetch flight data
+
+### 📚 Shared Library (`shared/`)
+
+- **Models**: Flight data structures (Pydantic models)
+- **Services**: FlightsService for web scraping and data parsing
+- **Used by**: Both API and Scheduler services
+
+## 🚀 Running Services
+
+### API Service
 
 ```bash
-uv run start.py
+cd services/api
+uv run python main.py
 ```
 
-### Directly with Python
+Access at: http://localhost:8000
+
+### Scheduler Service
 
 ```bash
-uv run dev.py
+cd services/scheduler
+uv run python flights
 ```
 
-The API will be available at [http://localhost:8000](http://localhost:8000)
+## 🐳 Docker Deployment
 
-## Available Endpoints
+Each service has its own Dockerfile with optimized dependencies:
 
-- `GET /` - Returns "hello world"
-- `GET /health` - Returns API health status
-
-## Scheduler
-
-The project includes a dedicated scheduler service for flight monitoring:
-
-### Running the scheduler locally
+### Build API Service
 
 ```bash
-uv run python scheduler/flights
+docker build -f services/api/Dockerfile -t flights-api .
+docker run -p 8000:8000 flights-api
 ```
 
-### Deploying to Railway
+### Build Scheduler Service
 
-**Option 1: Separate Service (Recommended)**
-
-1. Create a new Railway service from the same repository
-2. Set the build source to use `scheduler/Dockerfile`
-3. The service will automatically run the flights monitoring job
-
-**Option 2: Cron Job on Main Service**
-
-1. Deploy your main FastAPI application to Railway
-2. In your Railway project dashboard, go to the "Cron" tab
-3. Add a new cron job with the command: `uv run python scheduler/flights`
-4. Set your desired schedule (e.g., `0 */6 * * *` for every 6 hours)
-
-### Scheduler Structure
-
-```
-scheduler/
-├── Dockerfile      # Docker configuration for scheduler service
-└── flights         # Executable Python script for flight monitoring
+```bash
+docker build -f services/scheduler/Dockerfile -t flights-scheduler .
+docker run flights-scheduler
 ```
 
-The scheduler will:
+## ☁️ Railway Deployment
 
-- Import and use your existing flight services
-- Output detailed logging with timestamps
-- Handle errors gracefully
-- Execute flight monitoring tasks
+### Option 1: Separate Services (Recommended)
+
+**API Service:**
+
+1. Create Railway service from repo
+2. Set build source: `services/api/Dockerfile`
+3. Service will run on assigned port
+
+**Scheduler Service:**
+
+1. Create second Railway service from same repo
+2. Set build source: `services/scheduler/Dockerfile`
+3. Service runs scheduler job once and exits (perfect for cron)
+
+### Option 2: Cron Jobs
+
+Deploy API service normally, then add cron jobs:
+
+```bash
+# In Railway cron tab
+uv run python services/scheduler/flights
+```
+
+## 🔧 Benefits of This Architecture
+
+### ✅ **Separation of Concerns**
+
+- API handles HTTP requests
+- Scheduler handles background jobs
+- Shared library prevents code duplication
+
+### ✅ **Independent Scaling**
+
+- Scale API service based on traffic
+- Run scheduler service on schedule
+- Different resource requirements
+
+### ✅ **Optimized Dependencies**
+
+- API service: Full web stack (FastAPI, Uvicorn)
+- Scheduler: Minimal deps (no web server needed)
+- Shared: Core business logic only
+
+### ✅ **Independent Deployment**
+
+- Deploy API without affecting scheduler
+- Deploy scheduler without affecting API
+- Each service has its own build context
+
+### ✅ **Development Flexibility**
+
+- Work on services independently
+- Test services in isolation
+- Different teams can own different services
+
+## 🛠️ Development
+
+### Adding New Features
+
+1. **Shared logic** → Add to `shared/services/` or `shared/models/`
+2. **API endpoints** → Add to `services/api/api/`
+3. **Scheduled tasks** → Extend `services/scheduler/flights`
+
+### Testing
+
+Each service can be tested independently:
+
+```bash
+# Test API
+cd services/api && uv run python -m pytest
+
+# Test Scheduler
+cd services/scheduler && uv run python flights
+```
+
+This microservices architecture provides flexibility, maintainability, and optimal resource usage for your flights alert system!

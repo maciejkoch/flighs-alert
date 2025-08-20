@@ -7,10 +7,10 @@ import sys
 import os
 from datetime import datetime
 
-# Add parent directory to path to import from app
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+# Add shared library to path
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
 
-# from app.services.flights import FlightsService
+from shared.services.flights import FlightsService
 
 
 def main():
@@ -20,12 +20,16 @@ def main():
 
     try:
         # Initialize flights service
-        # flights_service = FlightsService()
+        flights_service = FlightsService()
 
         # TODO: Add your flight monitoring logic here
         # For now, just print that the job is working
         print("Job is working")
         print("Flight monitoring task executed successfully")
+        
+        # Example: Get flights data
+        # flights_data = flights_service.getFlights()
+        # print(f"Found {len(flights_data.get('flights', []))} flights")
 
         # Example of what you might do:
         # - Check for new flight deals

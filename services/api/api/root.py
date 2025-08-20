@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from app.services.flights import FlightsService
+from shared.services.flights import FlightsService
 
 router = APIRouter()
 flights_service = FlightsService()
