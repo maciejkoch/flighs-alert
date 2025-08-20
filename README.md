@@ -33,23 +33,40 @@ The API will be available at [http://localhost:8000](http://localhost:8000)
 
 ## Scheduler
 
-The project includes a scheduler script for Railway's cron jobs:
+The project includes a dedicated scheduler service for flight monitoring:
 
 ### Running the scheduler locally
 
 ```bash
-uv run scheduler.py
+uv run python scheduler/flights
 ```
 
 ### Deploying to Railway
 
-1. Deploy your application to Railway
+**Option 1: Separate Service (Recommended)**
+
+1. Create a new Railway service from the same repository
+2. Set the build source to use `scheduler/Dockerfile`
+3. The service will automatically run the flights monitoring job
+
+**Option 2: Cron Job on Main Service**
+
+1. Deploy your main FastAPI application to Railway
 2. In your Railway project dashboard, go to the "Cron" tab
-3. Add a new cron job with the command: `uv run scheduler.py`
+3. Add a new cron job with the command: `uv run python scheduler/flights`
 4. Set your desired schedule (e.g., `0 */6 * * *` for every 6 hours)
 
-The scheduler script will output:
+### Scheduler Structure
 
-- "Job is working"
-- Current timestamp
-- Success confirmation
+```
+scheduler/
+├── Dockerfile      # Docker configuration for scheduler service
+└── flights         # Executable Python script for flight monitoring
+```
+
+The scheduler will:
+
+- Import and use your existing flight services
+- Output detailed logging with timestamps
+- Handle errors gracefully
+- Execute flight monitoring tasks
