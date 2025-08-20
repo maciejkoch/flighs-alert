@@ -1,0 +1,7 @@
+[build.api]
+builder = "dockerfile"
+dockerfilePath = "Dockerfile.api"
+
+[build.scheduler]
+builder = "dockerfile"
+dockerfilePath = "Dockerfile.scheduler"
