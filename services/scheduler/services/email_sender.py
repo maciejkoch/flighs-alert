@@ -77,7 +77,8 @@ class EmailSender:
         to_emails: List[str],
         flights: List[dict],
         date_range: str,
-        source_url: Optional[str] = None
+        source_url: Optional[str] = None,
+        ai_destination_content: Optional[str] = None
     ) -> bool:
         """
         Send a flight alert email with formatted flight information.
@@ -87,6 +88,8 @@ class EmailSender:
             flights: List of flight dictionaries
             date_range: Date range for the search
             source_url: Optional URL to the flight search results
+            ai_destination_content: Optional AI-generated destination 
+                descriptions
 
         Returns:
             bool: True if email was sent successfully, False otherwise
@@ -110,6 +113,11 @@ Found {len(flights)} flights:
 
         if len(flights) > 10:
             text_content += f"... and {len(flights) - 10} more flights\n\n"
+
+        # Add AI destination content if provided
+        if ai_destination_content:
+            text_content += "🌍 Destination Highlights:\n\n"
+            text_content += ai_destination_content + "\n\n"
 
         text_content += "Happy travels! ✈️\n\n"
         
@@ -141,12 +149,29 @@ padding: 15px; margin: 10px 0; border-radius: 5px;">
 
         html_content += "</div>"
         
+        # Add AI destination content if provided
+        if ai_destination_content:
+            html_content += """
+<div style="margin: 25px 0; padding: 20px; background-color: #f8f9fa;
+border-left: 4px solid #17a2b8; border-radius: 5px;">
+<h3 style="color: #17a2b8; margin: 0 0 15px 0;">🌍 Destination Highlights</h3>
+<div style="line-height: 1.6; color: #495057;">"""
+            
+            # Convert plain text to HTML with proper line breaks
+            for line in ai_destination_content.split('\n'):
+                if line.strip():
+                    html_content += (
+                        f"<p style='margin: 10px 0;'>{line.strip()}</p>"
+                    )
+            
+            html_content += "</div></div>"
+        
         # Add source URL if provided
         if source_url:
             html_content += f"""
 <div style="margin: 20px 0; text-align: center;">
-<a href="{source_url}" style="background-color: #3498db; color: white; 
-padding: 12px 24px; text-decoration: none; border-radius: 5px; 
+<a href="{source_url}" style="background-color: #3498db; color: white;
+padding: 12px 24px; text-decoration: none; border-radius: 5px;
 display: inline-block; font-weight: bold;">
 🔗 View All Results on Azair.eu
 </a>

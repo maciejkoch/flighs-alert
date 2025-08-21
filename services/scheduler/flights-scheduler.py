@@ -8,11 +8,12 @@ import os
 from datetime import datetime
 from dotenv import load_dotenv
 
-# Load environment variables from .env file
-load_dotenv()
-
 from services.azair_scraper import FlightsService
 from services.email_sender import EmailSender
+from services.ai_destinations import AIDestinationsService
+
+# Load environment variables from .env file
+load_dotenv()
 
 
 def main():
@@ -52,6 +53,27 @@ def main():
         destinations = list(set([flight.destination for flight in flights]))
         print(f"Destinations: {destinations}")
         
+        # Get AI-generated destination descriptions and funny facts
+        ai_destination_content = None
+        if destinations and os.getenv('OPENAI_API_KEY'):
+            try:
+                print("\n--- Getting AI Destination Info ---")
+                ai_destinations_service = AIDestinationsService()
+                destinations_info = (
+                    ai_destinations_service.get_destinations_info(destinations)
+                )
+                ai_destination_content = (
+                    ai_destinations_service.format_response(destinations_info)
+                )
+                print("AI Destination Descriptions:")
+                print(ai_destination_content)
+            except Exception as e:
+                print(f"⚠️ AI Destinations service failed: {e}")
+        elif destinations and not os.getenv('OPENAI_API_KEY'):
+            print("⚠️ OPENAI_API_KEY not found - AI destination info disabled")
+        else:
+            print("No destinations found for AI processing")
+        
         if flights:
             print("\n--- Flight Results ---")
             for i, flight in enumerate(flights[:5], 1):  # Show first 5 flights
@@ -65,14 +87,17 @@ def main():
             # Send email alert if recipients are configured
             recipient_emails = os.getenv('ALERT_EMAILS')
             if recipient_emails and email_sender:
-                recipients = [email.strip() for email in recipient_emails.split(',')]
+                recipients = [
+                    email.strip() for email in recipient_emails.split(',')
+                ]
                 print(f"\nSending email alert to: {', '.join(recipients)}")
                 
                 success = email_sender.send_flight_alert(
                     recipients, 
                     flights, 
                     date_range,
-                    flights_data.url
+                    flights_data.url,
+                    ai_destination_content
                 )
                 
                 if success:
@@ -80,9 +105,14 @@ def main():
                 else:
                     print("❌ Failed to send email alert")
             elif recipient_emails and not email_sender:
-                print("⚠️ Email recipients configured but email service unavailable")
+                print(
+                    "⚠️ Email recipients configured but email service "
+                    "unavailable"
+                )
             else:
-                print("📧 No email recipients configured (ALERT_EMAILS not set)")
+                print(
+                    "📧 No email recipients configured (ALERT_EMAILS not set)"
+                )
                 
         else:
             print("No flights found.")
