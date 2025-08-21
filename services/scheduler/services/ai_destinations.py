@@ -46,7 +46,7 @@ class AIDestinationsService:
             Odpowiedź sformatuj dokładnie w następującym formacie:
             [krótki opis miejsca rozpoczynający się od nazwy miejsca] [zabawny fakt o miejscu]
             
-            Każde miejsce w osobnej linii. Odpowiadaj tylko po polsku.
+            Każde miejsce w osobnej linii. Pomijaj zdublowanie miejsca. Odpowiadaj tylko po polsku.
             """
             
             response = self.client.chat.completions.create(
@@ -61,7 +61,7 @@ class AIDestinationsService:
                         "content": prompt
                     }
                 ],
-                max_tokens=1000,
+                max_tokens=2000,
                 temperature=0.7
             )
             
