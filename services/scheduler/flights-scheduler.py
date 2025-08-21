@@ -6,9 +6,10 @@ This script handles scheduled flight price monitoring tasks.
 import sys
 import os
 from datetime import datetime
+from dotenv import load_dotenv
 
-# Add local services to path
-sys.path.insert(0, os.path.dirname(__file__))
+# Load environment variables from .env file
+load_dotenv()
 
 from services.azair_scraper import FlightsService
 from services.email_sender import EmailSender
@@ -40,20 +41,23 @@ def main():
         # Get flights data
         flights_data = flights_service.getFlights()
         
-        print(f"Status: {flights_data.get('status')}")
-        print(f"Message: {flights_data.get('message')}")
-        date_range = f"{flights_data.get('startDate')} - {flights_data.get('endDate')}"
+        print(f"Status: {flights_data.status}")
+        print(f"Message: {flights_data.message}")
+        date_range = f"{flights_data.startDate} - {flights_data.endDate}"
         print(f"Date Range: {date_range}")
         
-        flights = flights_data.get('flights', [])
+        flights = flights_data.flights
         print(f"Found {len(flights)} flights")
+
+        destinations = list(set([flight.destination for flight in flights]))
+        print(f"Destinations: {destinations}")
         
         if flights:
             print("\n--- Flight Results ---")
             for i, flight in enumerate(flights[:5], 1):  # Show first 5 flights
-                print(f"\n{i}. {flight.get('start', 'N/A')}")
-                print(f"   Return: {flight.get('return_flight', 'N/A')}")
-                print(f"   Price: {flight.get('priceText', 'N/A')}")
+                print(f"\n{i}. {flight.start}")
+                print(f"   Return: {flight.return_flight}")
+                print(f"   Price: {flight.priceText}")
             
             if len(flights) > 5:
                 print(f"\n... and {len(flights) - 5} more flights")
@@ -68,7 +72,7 @@ def main():
                     recipients, 
                     flights, 
                     date_range,
-                    flights_data.get('url')
+                    flights_data.url
                 )
                 
                 if success:
@@ -82,20 +86,6 @@ def main():
                 
         else:
             print("No flights found.")
-            
-            # Send notification if no flights found (optional)
-            recipient_emails = os.getenv('ALERT_EMAILS')
-            send_no_flights = os.getenv('SEND_NO_FLIGHTS_ALERT', 'false').lower() == 'true'
-            
-            if recipient_emails and send_no_flights and email_sender:
-                recipients = [email.strip() for email in recipient_emails.split(',')]
-                message = f"No flights found for date range: {date_range}"
-                email_sender.send_simple_alert(recipients, message)
-                print("📧 No-flights notification sent")
-        
-        print(f"\nSource URL: {flights_data.get('url', 'N/A')}")
-        print("Flight monitoring task executed successfully")
-        print("=== Flights Scheduler Job Completed ===")
 
     except Exception as e:
         print(f"Error in flights scheduler: {e}")

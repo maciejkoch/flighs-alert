@@ -1,10 +1,10 @@
 import requests
 from bs4 import BeautifulSoup, Tag
-from typing import List, Dict, Any, Optional
+from typing import List, Optional
 import re
 from datetime import datetime, timedelta
 
-from models.flight import Flight
+from models.flight import Flight, FlightData
 
 
 class FlightsService:
@@ -69,7 +69,7 @@ class FlightsService:
         
         return start_date, end_date
     
-    def getFlights(self) -> Dict[str, Any]:
+    def getFlights(self) -> FlightData:
         try:
             # Get the date information
             start_date, end_date = self._get_date_range()
@@ -79,34 +79,34 @@ class FlightsService:
             if response.status_code == 200:
                 flights = self._parse_flights(response.text)
                 filtered_flights = self._filter_flights_by_price(flights)
-                return {
-                    "status": response.status_code,
-                    "message": "Success",
-                    "flights": filtered_flights,
-                    "startDate": start_date,
-                    "endDate": end_date,
-                    "url": self.url
-                }
+                return FlightData(
+                    status=response.status_code,
+                    message="Success",
+                    flights=filtered_flights,
+                    startDate=start_date,
+                    endDate=end_date,
+                    url=self.url
+                )
             else:
-                return {
-                    "status": response.status_code,
-                    "message": "Failed to fetch flights data",
-                    "flights": [],
-                    "startDate": start_date,
-                    "endDate": end_date,
-                    "url": self.url
-                }
+                return FlightData(
+                    status=response.status_code,
+                    message="Failed to fetch flights data",
+                    flights=[],
+                    startDate=start_date,
+                    endDate=end_date,
+                    url=self.url
+                )
         except Exception as e:
             # Get dates even in error case
             start_date, end_date = self._get_date_range()
-            return {
-                "status": 500,
-                "message": f"Error: {str(e)}",
-                "flights": [],
-                "startDate": start_date,
-                "endDate": end_date,
-                "url": self.url
-            }
+            return FlightData(
+                status=500,
+                message=f"Error: {str(e)}",
+                flights=[],
+                startDate=start_date,
+                endDate=end_date,
+                url=self.url
+            )
     
     def _parse_flights(self, html_content: str) -> List[Flight]:
         """Parse HTML content and return a list of Flight objects."""
@@ -142,8 +142,8 @@ class FlightsService:
             return None
         
         # Extract journey information
-        start = self._extract_journey_info(depart_p)
-        return_flight = self._extract_journey_info(return_p)
+        start, _ = self._extract_journey_info(depart_p)
+        return_flight, destination = self._extract_journey_info(return_p)
         
         # Extract price information
         price_text, price = self._extract_price_info(result_div)
@@ -152,16 +152,17 @@ class FlightsService:
             start=start,
             return_flight=return_flight,
             priceText=price_text,
-            price=price
+            price=price,
+            destination=destination
         )
     
-    def _extract_journey_info(self, paragraph: Tag) -> str:
+    def _extract_journey_info(self, paragraph: Tag) -> [str, str]:
         """Extract journey information from a paragraph element."""
         date = self._extract_date(paragraph)
-        start_info = self._extract_location_info(paragraph, "from")
-        stop_info = self._extract_location_info(paragraph, "to")
+        start_info, destination = self._extract_location_info(paragraph, "from")
+        stop_info, _ = self._extract_location_info(paragraph, "to")
         
-        return f"{date} {start_info} → {stop_info}"
+        return f"{date} {start_info} → {stop_info}", destination
     
     def _extract_date(self, paragraph: Tag) -> str:
         """Extract date from paragraph."""
@@ -170,7 +171,7 @@ class FlightsService:
             return date_span.get_text(strip=True).replace("\xa0", " ")
         return ""
     
-    def _extract_location_info(self, paragraph: Tag, location_type: str) -> str:
+    def _extract_location_info(self, paragraph: Tag, location_type: str) -> [str, str]:
         """Extract location information (time, city, airport code)."""
         span = paragraph.find("span", class_=location_type)
         if not span:
@@ -185,7 +186,7 @@ class FlightsService:
         # Extract city name (clean, without nested elements)
         city = self._extract_city_name(span, time)
         
-        return f"{time} {city} ({code})"
+        return f"{time} {city} ({code})", city
     
     def _extract_time(self, span: Tag) -> str:
         """Extract time from location span."""
@@ -241,9 +242,9 @@ class FlightsService:
         
         return price_text, price
     
-    def _filter_flights_by_price(self, flights: List[Flight]) -> List[Dict[str, Any]]:
+    def _filter_flights_by_price(self, flights: List[Flight]) -> List[Flight]:
         filtered_flights = [
-            flight.model_dump()
+            flight
             for flight in flights
             if flight.price < self.price_limit
         ]

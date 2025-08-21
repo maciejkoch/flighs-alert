@@ -104,9 +104,9 @@ Found {len(flights)} flights:
 """
 
         for i, flight in enumerate(flights[:10], 1):  # Limit to 10 flights
-            text_content += f"{i}. {flight.get('start', 'N/A')}\n"
-            text_content += f"   Return: {flight.get('return_flight', 'N/A')}\n"
-            text_content += f"   Price: {flight.get('priceText', 'N/A')}\n\n"
+            text_content += f"{i}. {flight.start}\n"
+            text_content += f"   Return: {flight.return_flight}\n"
+            text_content += f"   Price: {flight.priceText}\n\n"
 
         if len(flights) > 10:
             text_content += f"... and {len(flights) - 10} more flights\n\n"
@@ -124,9 +124,9 @@ Found {len(flights)} flights:
 <div style="margin: 20px 0;">"""
 
         for i, flight in enumerate(flights[:10], 1):
-            start = flight.get('start', 'N/A')
-            return_flight = flight.get('return_flight', 'N/A')
-            price = flight.get('priceText', 'N/A')
+            start = flight.start
+            return_flight = flight.return_flight
+            price = flight.priceText
             html_content += f"""<div style="border: 1px solid #ddd;
 padding: 15px; margin: 10px 0; border-radius: 5px;">
 <h3 style="color: #2c3e50; margin: 0 0 10px 0;">{i}. Flight Deal</h3>
